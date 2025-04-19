@@ -1,0 +1,95 @@
+name: Run PR Maker CLI
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseBranch:
+        description: 'Base branch for the PR'
+        required: true
+        default: 'main'
+      prTitle:
+        description: 'Pull Request Title'
+        required: false
+        default: 'Automated PR from CI'
+      prBody:
+        description: 'Pull Request Body'
+        required: false
+        default: 'This PR was automatically created by the CI workflow.'
+      prLabels:
+        description: 'Comma-separated list of labels (optional)'
+        required: false
+        default: ''
+      changeInstructionsJson:
+        description: 'JSON string describing the changes to make'
+        required: true # Assuming the changes are always required
+        type: string
+      dryRun:
+        description: 'Enable dry run mode'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run_cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.baseBranch }}
+          fetch-depth: 0
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x # Or your specific version
+
+      - name: Configure Git
+        run: |
+          git config user.name "pr-maker[bot]"
+          git config user.email "pr-maker@axhxrx.com"
+
+      - name: Generate unique branch name
+        id: vars
+        run: echo "branch_name=ci-pr-${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Extract Org and Repo
+        id: repo_info
+        run: |
+          IFS='/' read -r org repo <<< "${{ github.repository }}"
+          echo "org=$org" >> $GITHUB_OUTPUT
+          echo "repo=$repo" >> $GITHUB_OUTPUT
+
+      - name: Run PR Maker CLI (Local Development Mode)
+        run: |
+          # Build the arguments string dynamically
+          ARGS=(
+            -A mod.ts
+            --githubOrg "${{ steps.repo_info.outputs.org }}"
+            --repoName "${{ steps.repo_info.outputs.repo }}"
+            --baseBranch "${{ github.event.inputs.baseBranch }}"
+            --branch "${{ steps.vars.outputs.branch_name }}"
+            --prTitle "${{ github.event.inputs.prTitle }}"
+            --prBody "${{ github.event.inputs.prBody }}"
+          )
+          if [[ -n "${{ github.event.inputs.prLabels }}" ]]; then
+            ARGS+=("--prLabels" "${{ github.event.inputs.prLabels }}")
+          fi
+          if [[ "${{ github.event.inputs.dryRun }}" == "true" ]]; then
+            ARGS+=("--dryRun")
+          fi
+          # NOTE: We are NOT passing the JSON instructions via CLI args.
+          # The script will read it from the environment variable below.
+
+          echo "Running deno run ${ARGS[@]}"
+          deno run "${ARGS[@]}"
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass the JSON instructions as an environment variable
+          CHANGE_INSTRUCTIONS_JSON: ${{ github.event.inputs.changeInstructionsJson }}
+          # Add any other ENV VARS your script needs
