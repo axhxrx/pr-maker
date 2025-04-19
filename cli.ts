@@ -50,7 +50,7 @@ const argsDefinition = {
 } as const;
 
 // Define default configuration and prompts
-const defaultConfig = {
+export const defaultConfig = {
   githubOrg: configValue('', { promptIfFalsy: 'Enter the GitHub organization name:' }),
   repoName: configValue('', { promptIfFalsy: 'Enter the repository name:' }),
   baseBranch: configValue('main', { promptIfFalsy: 'Enter the base branch name:' }),

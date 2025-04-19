@@ -1,6 +1,11 @@
 import { ensureDir } from '@std/fs';
 import { join } from '@std/path';
 
+/** Global array to provide scripted user inputs for testing initConfig prompts. Tests should push expected inputs here before calling initConfig. */
+export const initConfigScriptedUserInputs: string[] = [];
+/** Global array to record the history of prompts issued by initConfig. Tests can inspect this after calling initConfig. */
+export const initConfigPromptHistory: { message: string; defaultValue?: string }[] = [];
+
 /** Options for individual configuration values */
 export interface ConfigValueOptions
 {
@@ -243,19 +248,31 @@ export async function initConfig<
         promptMessage = `Please enter value for '${String(key)}':`;
       }
 
-      // Use Deno.prompt - requires --allow-env implicitly, sometimes --allow-read/write for tty
-      const userInput = prompt(promptMessage);
+      // Use the new promptUser function
+      const userInput = await promptUser(promptMessage, String(currentConfig[key]));
 
-      if (userInput === null)
+      if (userInput !== null)
       {
-        throw new Error(`Configuration incomplete: User cancelled prompt for key '${String(key)}'.`);
+        // Coerce based on original default type
+        const currentValue = actualDefaultConfig[key];
+        let promptedValue: T[typeof key];
+        if (typeof currentValue === 'number')
+        {
+          promptedValue = Number(userInput) as T[typeof key];
+        }
+        else if (typeof currentValue === 'boolean')
+        {
+          promptedValue = (userInput.toLowerCase() === 'true') as T[typeof key];
+        }
+        else
+        {
+          promptedValue = userInput as T[typeof key];
+        }
+        // Update the current config with the prompted value
+        currentConfig[key] = promptedValue;
+        // Persist the change immediately after successful prompt
+        needsSaveAfterPrompt = true;
       }
-
-      console.info(`Received user input for config key '${String(key)}'.`);
-      // Simple string assignment. Caller might need coercion.
-      // Assigning string from prompt. May not match original type T[K].
-      currentConfig[key] = userInput as T[typeof key];
-      needsSaveAfterPrompt = true;
     }
   }
 
@@ -323,4 +340,29 @@ export async function initConfig<
       return JSON.stringify(currentConfig, null, 2);
     },
   };
+}
+
+/** Internal helper to prompt user, supporting scripted inputs for testing. */
+async function promptUser(message: string, defaultValue?: string): Promise<string | null>
+{
+  // Record the prompt attempt
+  initConfigPromptHistory.push({ message, defaultValue });
+
+  // Check for scripted input
+  if (initConfigScriptedUserInputs.length > 0)
+  {
+    const scriptedInput = initConfigScriptedUserInputs.shift()!;
+    // Simulate prompt output for test clarity
+    let logMessage = message;
+    if (defaultValue)
+    {
+      logMessage += ` (${defaultValue})`;
+    }
+    console.log(`${logMessage} (scripted input: ${scriptedInput})`); 
+    // Return the scripted input (null if it was an empty string, mimicking Deno.prompt behavior)
+    return scriptedInput === '' ? null : scriptedInput;
+  }
+  
+  // If no scripted input, use the real global prompt()
+  return await prompt(message, defaultValue);
 }
