@@ -1,5 +1,6 @@
-import { main } from "./main.ts";
+import { main } from './main.ts';
 
-if (import.meta.main) {
+if (import.meta.main)
+{
   main();
 }

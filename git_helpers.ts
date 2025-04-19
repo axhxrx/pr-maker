@@ -3,7 +3,8 @@
 // import { join } from 'jsr:@std/path@0.225.2';
 
 /** Helper to run a Deno.Command and check for errors */
-async function runGitCommand(args: string[], cwd: string): Promise<void> {
+async function runGitCommand(args: string[], cwd: string): Promise<void>
+{
   console.log(`Running: git ${args.join(' ')} in ${cwd}`);
   const command = new Deno.Command('git', {
     args: args,
@@ -14,14 +15,18 @@ async function runGitCommand(args: string[], cwd: string): Promise<void> {
 
   const output = await command.output();
 
-  if (!output.success) {
+  if (!output.success)
+  {
     const errorOutput = new TextDecoder().decode(output.stderr);
     console.error(`Git command failed: git ${args.join(' ')}`);
     console.error('Error Output:', errorOutput);
     throw new Error(`Git command failed with exit code ${output.code}. Error: ${errorOutput.trim()}`);
-  } else {
+  }
+  else
+  {
     const successOutput = new TextDecoder().decode(output.stdout);
-    if (successOutput.trim()) {
+    if (successOutput.trim())
+    {
       console.log('Git Output:', successOutput.trim());
     }
   }
@@ -42,9 +47,10 @@ export async function checkoutRevision(
   repo: string,
   revision: string,
   githubToken?: string,
-): Promise<string> {
+): Promise<string>
+{
   // Construct repo URL (handle token for private repos)
-  const repoUrl = githubToken 
+  const repoUrl = githubToken
     ? `https://oauth2:${githubToken}@github.com/${org}/${repo}.git`
     : `https://github.com/${org}/${repo}.git`;
 
@@ -53,7 +59,8 @@ export async function checkoutRevision(
   const tempDir = await Deno.makeTempDir({ prefix: `pr-maker_${repo}_` });
   console.log(`Created temporary directory: ${tempDir}`);
 
-  try {
+  try
+  {
     // Clone the specific revision (using --depth 1 for efficiency)
     // Note: Cloning a specific commit hash directly might require fetching first or different clone args.
     // Cloning a branch/tag and then checking out the commit is often more reliable.
@@ -66,16 +73,21 @@ export async function checkoutRevision(
     // For a specific commit, a full clone then checkout might be safer:
     // await runGitCommand(['clone', repoUrl, '.'], tempDir);
     // await runGitCommand(['checkout', revision], tempDir);
-    
+
     return tempDir;
-  } catch (error) {
+  }
+  catch (error)
+  {
     console.error('Error during checkout:', error);
     // Attempt to clean up the temporary directory on failure
-    try {
-        await Deno.remove(tempDir, { recursive: true });
-        console.log(`Cleaned up temporary directory: ${tempDir}`);
-    } catch (cleanupError) {
-        console.error(`Failed to cleanup temporary directory ${tempDir}:`, cleanupError);
+    try
+    {
+      await Deno.remove(tempDir, { recursive: true });
+      console.log(`Cleaned up temporary directory: ${tempDir}`);
+    }
+    catch (cleanupError)
+    {
+      console.error(`Failed to cleanup temporary directory ${tempDir}:`, cleanupError);
     }
     throw error; // Re-throw the original error
   }
@@ -88,7 +100,8 @@ export async function checkoutRevision(
  * @param cwd The path to the local repository.
  * @returns True if the branch exists on the remote, false otherwise.
  */
-async function remoteBranchExists(branchName: string, cwd: string): Promise<boolean> {
+async function remoteBranchExists(branchName: string, cwd: string): Promise<boolean>
+{
   console.log(`Checking if remote branch 'origin/${branchName}' exists...`);
   const command = new Deno.Command('git', {
     args: ['ls-remote', '--heads', 'origin', branchName],
@@ -113,12 +126,14 @@ async function remoteBranchExists(branchName: string, cwd: string): Promise<bool
  * @param cwd The path to the local repository.
  * @returns The name of the newly created and checked-out branch.
  */
-export async function createUniqueBranch(desiredBranchName: string, cwd: string): Promise<string> {
+export async function createUniqueBranch(desiredBranchName: string, cwd: string): Promise<string>
+{
   let branchName = desiredBranchName;
   let counter = 0;
 
   // Check if the desired name or variations exist remotely
-  while (await remoteBranchExists(branchName, cwd)) {
+  while (await remoteBranchExists(branchName, cwd))
+  {
     counter++;
     branchName = `${desiredBranchName}-${counter}`;
     console.log(`Branch 'origin/${branchName}' already exists remotely. Trying '${branchName}'...`);
@@ -137,7 +152,8 @@ export async function createUniqueBranch(desiredBranchName: string, cwd: string)
  * @param message The commit message.
  * @param cwd The path to the local repository.
  */
-export async function commitChanges(message: string, cwd: string): Promise<void> {
+export async function commitChanges(message: string, cwd: string): Promise<void>
+{
   console.log('Staging all changes...');
   await runGitCommand(['add', '.'], cwd);
   console.log(`Committing changes with message: "${message}"`);
@@ -151,7 +167,8 @@ export async function commitChanges(message: string, cwd: string): Promise<void>
  * @param branchName The name of the local branch to push.
  * @param cwd The path to the local repository.
  */
-export async function pushBranch(branchName: string, cwd: string): Promise<void> {
+export async function pushBranch(branchName: string, cwd: string): Promise<void>
+{
   console.log(`Pushing branch '${branchName}' to origin...`);
   // Use -u to set upstream for the first push
   await runGitCommand(['push', '-u', 'origin', branchName], cwd);
@@ -165,7 +182,7 @@ export async function pushBranch(branchName: string, cwd: string): Promise<void>
 //     const repo = 'deno'; // Replace with a test repo
 //     const revision = 'v1.40.0'; // Replace with a test tag/branch/commit
 //     // Provide a token via env if testing private repos
-//     const token = Deno.env.get('GITHUB_TOKEN_TEST'); 
+//     const token = Deno.env.get('GITHUB_TOKEN_TEST');
 
 //     console.log(`Attempting checkout of ${org}/${repo}@${revision}`);
 //     const checkoutDir = await checkoutRevision(org, repo, revision, token);

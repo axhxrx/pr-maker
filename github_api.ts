@@ -2,7 +2,8 @@
  * Represents the expected successful response structure from the GitHub API
  * when creating a pull request. We only care about the html_url for now.
  */
-interface GitHubPrResponse {
+interface GitHubPrResponse
+{
   html_url: string;
   // Add other fields here if needed later
 }
@@ -10,7 +11,8 @@ interface GitHubPrResponse {
 /**
  * Represents the structure for an error response from the GitHub API.
  */
-interface GitHubErrorResponse {
+interface GitHubErrorResponse
+{
   message: string;
   errors?: { resource: string; field: string; code: string }[];
   documentation_url: string;
@@ -38,7 +40,8 @@ export async function createPullRequest(
   baseBranch: string,
   githubToken: string,
   labels?: string[],
-): Promise<string> {
+): Promise<string>
+{
   const apiUrl = `https://api.github.com/repos/${org}/${repo}/pulls`;
 
   console.log(`Creating Pull Request: '${headBranch}' -> '${baseBranch}' in ${org}/${repo}`);
@@ -50,23 +53,29 @@ export async function createPullRequest(
     base: baseBranch,
   };
 
-  try {
+  try
+  {
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${githubToken}`,
-        'Accept': 'application/vnd.github.v3+json',
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
         'X-GitHub-Api-Version': '2022-11-28', // Recommended practice
       },
       body: JSON.stringify(requestBody),
     });
 
-    if (!response.ok) {
+    if (!response.ok)
+    {
       const errorData: GitHubErrorResponse = await response.json();
       console.error('GitHub API Error Response:', JSON.stringify(errorData, null, 2));
       throw new Error(
-        `GitHub API request failed with status ${response.status}: ${errorData.message}${errorData.errors ? ' (' + errorData.errors.map(e => `${e.resource}.${e.field}: ${e.code}`).join(', ') + ')' : ''}`,
+        `GitHub API request failed with status ${response.status}: ${errorData.message}${
+          errorData.errors
+            ? ' (' + errorData.errors.map(e => `${e.resource}.${e.field}: ${e.code}`).join(', ') + ')'
+            : ''
+        }`,
       );
     }
 
@@ -74,19 +83,24 @@ export async function createPullRequest(
     console.log(`Successfully created Pull Request: ${prData.html_url}`);
 
     // Apply labels if provided
-    if (labels && labels.length > 0 && prData.html_url) {
-        // Extract PR number from the URL (assuming standard GitHub URL format)
-        const prNumber = prData.html_url.split('/').pop(); 
-        if (prNumber) {
-            await applyLabels(org, repo, prNumber, labels, githubToken);
-        } else {
-            console.warn('Could not extract PR number to apply labels.');
-        }
+    if (labels && labels.length > 0 && prData.html_url)
+    {
+      // Extract PR number from the URL (assuming standard GitHub URL format)
+      const prNumber = prData.html_url.split('/').pop();
+      if (prNumber)
+      {
+        await applyLabels(org, repo, prNumber, labels, githubToken);
+      }
+      else
+      {
+        console.warn('Could not extract PR number to apply labels.');
+      }
     }
 
     return prData.html_url;
-
-  } catch (error) {
+  }
+  catch (error)
+  {
     console.error('Error creating pull request:', error);
     throw error; // Re-throw the error for the caller to handle
   }
@@ -94,7 +108,7 @@ export async function createPullRequest(
 
 /**
  * Applies labels to an existing GitHub Pull Request.
- * 
+ *
  * @param org The GitHub organization or user name.
  * @param repo The repository name.
  * @param prNumber The number of the pull request.
@@ -102,38 +116,45 @@ export async function createPullRequest(
  * @param githubToken The GitHub personal access token for authentication.
  */
 async function applyLabels(
-    org: string,
-    repo: string,
-    prNumber: string,
-    labels: string[],
-    githubToken: string
-): Promise<void> {
-    const apiUrl = `https://api.github.com/repos/${org}/${repo}/issues/${prNumber}/labels`;
-    console.log(`Applying labels ${JSON.stringify(labels)} to PR #${prNumber}...`);
+  org: string,
+  repo: string,
+  prNumber: string,
+  labels: string[],
+  githubToken: string,
+): Promise<void>
+{
+  const apiUrl = `https://api.github.com/repos/${org}/${repo}/issues/${prNumber}/labels`;
+  console.log(`Applying labels ${JSON.stringify(labels)} to PR #${prNumber}...`);
 
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'POST', // Using POST adds labels without replacing existing ones
-            headers: {
-                'Authorization': `Bearer ${githubToken}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json',
-                'X-GitHub-Api-Version': '2022-11-28',
-            },
-            body: JSON.stringify({ labels }),
-        });
+  try
+  {
+    const response = await fetch(apiUrl, {
+      method: 'POST', // Using POST adds labels without replacing existing ones
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      body: JSON.stringify({ labels }),
+    });
 
-        if (!response.ok) {
-            const errorData: GitHubErrorResponse = await response.json();
-            console.error('GitHub API Error Response (applying labels):', JSON.stringify(errorData, null, 2));
-            // Log warning instead of throwing error, as PR creation was successful
-            console.warn(
-                `Failed to apply labels to PR #${prNumber}. Status ${response.status}: ${errorData.message}`
-            );
-        } else {
-            console.log(`Successfully applied labels to PR #${prNumber}.`);
-        }
-    } catch (error) {
-        console.warn(`Error applying labels to PR #${prNumber}:`, error);
+    if (!response.ok)
+    {
+      const errorData: GitHubErrorResponse = await response.json();
+      console.error('GitHub API Error Response (applying labels):', JSON.stringify(errorData, null, 2));
+      // Log warning instead of throwing error, as PR creation was successful
+      console.warn(
+        `Failed to apply labels to PR #${prNumber}. Status ${response.status}: ${errorData.message}`,
+      );
     }
+    else
+    {
+      console.log(`Successfully applied labels to PR #${prNumber}.`);
+    }
+  }
+  catch (error)
+  {
+    console.warn(`Error applying labels to PR #${prNumber}:`, error);
+  }
 }

@@ -1,30 +1,34 @@
-import { runCli } from "./cli.ts";
-import { assertStringIncludes, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts"; 
-import { spy, type SpyCall } from "https://deno.land/std@0.224.0/testing/mock.ts"; 
+import { assertEquals, assertStringIncludes } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { spy, type SpyCall } from 'https://deno.land/std@0.224.0/testing/mock.ts';
+import { runCli } from './cli.ts';
 
 /**
  * Tests for the main CLI logic in runCli.
  */
-Deno.test("runCli should display help message and return 0 with --help argument", async () => { 
+Deno.test('runCli should display help message and return 0 with --help argument', async () =>
+{
   // Spy on console.log to capture output
-  const logSpy = spy(console, "log");
+  const logSpy = spy(console, 'log');
 
   let exitCode: number | undefined;
-  try {
+  try
+  {
     // Provide the --help argument and capture the returned exit code
-    exitCode = await runCli(["--help"]);
-  } finally {
+    exitCode = await runCli(['--help']);
+  }
+  finally
+  {
     // Restore original functions
     logSpy.restore();
   }
 
   // Assert that the exit code returned by runCli is 0
-  assertEquals(exitCode, 0, "runCli should return 0 when --help is provided.");
+  assertEquals(exitCode, 0, 'runCli should return 0 when --help is provided.');
 
   // Verify that the help message includes expected sections
-  const allLogCalls = logSpy.calls.map((call: SpyCall) => call.args.join(" ")).join("\n");
-  assertStringIncludes(allLogCalls, "Usage: deno run", "Help message should contain Usage info.");
-  assertStringIncludes(allLogCalls, "Options:", "Help message should contain Options section.");
-  assertStringIncludes(allLogCalls, "--githubOrg", "Help message should list githubOrg option.");
-  assertStringIncludes(allLogCalls, "--help", "Help message should list help option.");
+  const allLogCalls = logSpy.calls.map((call: SpyCall) => call.args.join(' ')).join('\n');
+  assertStringIncludes(allLogCalls, 'Usage: deno run', 'Help message should contain Usage info.');
+  assertStringIncludes(allLogCalls, 'Options:', 'Help message should contain Options section.');
+  assertStringIncludes(allLogCalls, '--githubOrg', 'Help message should list githubOrg option.');
+  assertStringIncludes(allLogCalls, '--help', 'Help message should list help option.');
 });

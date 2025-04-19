@@ -358,11 +358,11 @@ async function promptUser(message: string, defaultValue?: string): Promise<strin
     {
       logMessage += ` (${defaultValue})`;
     }
-    console.log(`${logMessage} (scripted input: ${scriptedInput})`); 
+    console.log(`${logMessage} (scripted input: ${scriptedInput})`);
     // Return the scripted input (null if it was an empty string, mimicking Deno.prompt behavior)
     return scriptedInput === '' ? null : scriptedInput;
   }
-  
+
   // If no scripted input, use the real global prompt()
   return await prompt(message, defaultValue);
 }
