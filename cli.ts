@@ -77,7 +77,7 @@ async function promptSelect<T>(
     // deno-lint-ignore no-explicit-any -- Suppressing warning for explicit any type needed for complex @cliffy/prompt types
     const choice = options.options.find((opt: any) => 'value' in opt && opt.value === testAnswer);
     // Added check and clearer error message
-    if (!choice || !('name' in choice)) {
+    if (!choice || typeof choice !== 'object' || !('name' in choice)) {
       console.warn(`[Test Mode] Could not find matching option for answer: ${testAnswer}`);
       // Fallback or throw - throwing is safer for tests
       throw new Error(`[Test Mode] Test answer '${testAnswer}' not found or is not a valid option object in options`);
@@ -87,8 +87,8 @@ async function promptSelect<T>(
     // Return the provided test answer directly, assuming it's the correct type T
     return testAnswer;
   }
-  // deno-lint-ignore no-explicit-any
-  return await Select.prompt(options as any); // Cast needed due to complex type inference
+  
+  return await Select.prompt(options) as T; // Cast needed due to complex type inference
 }
 
 /**
