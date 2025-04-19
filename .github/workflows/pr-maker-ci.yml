@@ -50,8 +50,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "pr-maker[bot]"
-          git config user.email "pr-maker@axhxrx.com"
+          git config --global user.name "pr-maker[bot]"
+          git config --global user.email "pr-maker@axhxrx.com"
 
       - name: Generate unique branch name
         id: vars
