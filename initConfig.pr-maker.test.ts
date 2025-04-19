@@ -66,7 +66,8 @@ Deno.test('initConfig (pr-maker) should load default pr-maker config and handle 
         const configDir = dirname(configPath);
         await Deno.remove(configDir, { recursive: true }).catch(() => {}); // Remove dir recursively
     } catch (e) {
-        console.error(`Error cleaning up config dir for ${testAppId}: ${e.message}`);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error(`Error cleaning up config dir for ${testAppId}: ${errorMessage}`);
     }
     initConfigPromptHistory.length = 0; // Clear history post-test
     initConfigScriptedUserInputs.length = 0; // Clear inputs post-test (belt-and-suspenders)
@@ -117,7 +118,8 @@ Deno.test('initConfig (pr-maker) should respect GITHUB_TOKEN env override (no pr
         const configDir = dirname(configPath);
         await Deno.remove(configDir, { recursive: true }).catch(() => {}); // Remove dir recursively
     } catch (e) {
-        console.error(`Error cleaning up config dir for ${testAppId}: ${e.message}`);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error(`Error cleaning up config dir for ${testAppId}: ${errorMessage}`);
     }
     initConfigPromptHistory.length = 0; // Clear history post-test
     initConfigScriptedUserInputs.length = 0; // Clear inputs post-test
@@ -178,7 +180,8 @@ Deno.test('initConfig (pr-maker) set/get should work with pr-maker config', asyn
         const configDir = dirname(configPath);
         await Deno.remove(configDir, { recursive: true }).catch(() => {}); // Remove dir recursively
     } catch (e) {
-        console.error(`Error cleaning up config dir for ${testAppId}: ${e.message}`);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        console.error(`Error cleaning up config dir for ${testAppId}: ${errorMessage}`);
     }
     initConfigPromptHistory.length = 0; // Clear history post-test
     initConfigScriptedUserInputs.length = 0; // Clear inputs post-test
