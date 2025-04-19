@@ -69,6 +69,7 @@ jobs:
           # Build the arguments string dynamically
           ARGS=(
             -A mod.ts
+            --yes
             --githubOrg "${{ steps.repo_info.outputs.org }}"
             --repoName "${{ steps.repo_info.outputs.repo }}"
             --baseBranch "${{ github.event.inputs.baseBranch }}"
