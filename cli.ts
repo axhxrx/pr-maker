@@ -51,18 +51,18 @@ const argsDefinition = {
 
 // Define default configuration and prompts
 export const defaultConfig = {
-  githubOrg: configValue('', { promptIfFalsy: 'Enter the GitHub organization name:' }),
-  repoName: configValue('', { promptIfFalsy: 'Enter the repository name:' }),
-  baseBranch: configValue('main', { promptIfFalsy: 'Enter the base branch name:' }),
-  prTitle: configValue('Automated PR', { promptIfFalsy: 'Enter the pull request title:' }),
-  prBody: configValue('This PR was created automatically.', { promptIfFalsy: 'Enter the pull request body:' }),
-  prLabels: configValue('', { promptIfFalsy: 'Enter comma-separated labels (optional):' }),
+  githubOrg: configValue('', { promptIfFalsy: 'Enter the GitHub organization name:', envOverride: 'PR_MAKER_GITHUB_ORG' }),
+  repoName: configValue('', { promptIfFalsy: 'Enter the repository name:', envOverride: 'PR_MAKER_REPO_NAME' }),
+  baseBranch: configValue('main', { promptIfFalsy: 'Enter the base branch name:', envOverride: 'PR_MAKER_BASE_BRANCH' }),
+  prTitle: configValue('Automated PR', { promptIfFalsy: 'Enter the pull request title:', envOverride: 'PR_MAKER_PR_TITLE' }),
+  prBody: configValue('This PR was created automatically.', { promptIfFalsy: 'Enter the pull request body:', envOverride: 'PR_MAKER_PR_BODY' }),
+  prLabels: configValue('', { promptIfFalsy: 'Enter comma-separated labels (optional):', envOverride: 'PR_MAKER_PR_LABELS' }),
   githubToken: configValue('', {
     promptIfFalsy: 'Enter GitHub Token (or set GITHUB_TOKEN env var):',
     envOverride: 'GITHUB_TOKEN', // Standard environment variable for GitHub token
   }),
-  yes: false,
-  dryRun: false,
+  yes: configValue(false, { envOverride: 'PR_MAKER_YES' }),
+  dryRun: configValue(false, { envOverride: 'PR_MAKER_DRY_RUN' }),
 };
 
 /**
@@ -124,10 +124,10 @@ async function promptToggle(
 }
 
 // Main CLI function
-async function runCli() {
+export async function runCli(argsOverride?: string[]) { // Added export and argsOverride
   console.log('Welcome to pr-maker!\n');
 
-  const parsedArgs = parseArgs(Deno.args, argsDefinition);
+  const parsedArgs = parseArgs(argsOverride ?? Deno.args, argsDefinition); // Use argsOverride or Deno.args
 
   if (parsedArgs.help) {
     // Basic help message (can be expanded)
@@ -335,12 +335,4 @@ async function runCli() {
   // // Pretty print the final config, masking token
   // const configToPrint = { ...currentConfig, githubToken: currentConfig.githubToken ? '********' : '(not set)' };
   // console.log(JSON.stringify(configToPrint, null, 2));
-}
-
-// Run the CLI if this script is the main entry point
-if (import.meta.main) {
-  runCli().catch(err => {
-    console.error('Error:', err);
-    Deno.exit(1);
-  });
 }

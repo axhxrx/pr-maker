@@ -1,4 +1,5 @@
-if (import.meta.main)
-{
-  console.log('Hello, this is @axhxrx/pr-maker');
+import { main } from "./main.ts";
+
+if (import.meta.main) {
+  main();
 }
