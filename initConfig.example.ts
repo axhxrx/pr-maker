@@ -1,3 +1,4 @@
+import { Input, Select } from '@cliffy/prompt';
 import { parseArgs } from '@std/cli';
 import { configValue, initConfig } from './initConfig.ts';
 
@@ -38,7 +39,6 @@ const defaultConfig = {
   suffix: '',
   repeat: 1,
   'api-key': configValue('', {
-    promptIfFalsy: 'Enter your API key (or quit this program, set the env var API_KEY, and re-run it)',
     envOverride: 'API_KEY',
   }),
   yes: false,
@@ -55,7 +55,39 @@ export async function initConfigExample()
   const prefix = parsedArgs.prefix ?? config.get('prefix');
   const suffix = parsedArgs.suffix ?? config.get('suffix');
   const repeat = parsedArgs.repeat ?? config.get('repeat');
-  // const apiKey = parsedArgs['api-key'] ?? config.get('api-key');
+
+  // SPecial case not handled by initConfig():
+  let apiKey = parsedArgs['api-key'] ?? config.get('api-key');
+  if (!apiKey)
+  {
+    console.log(`
+      🔑 No API key found. You can specify your API key by using the --api-key argment, or by setting the API_KEY environment variable before running this program, or by storing it in the local config file (NOTE: stored in plaintext), or by entering it interactively. What would you like to do?
+    `);
+
+    const answer = await Select.prompt({
+      message: 'What would you like to do?',
+      options: [
+        { value: 'exit', name: 'Exit this program now' },
+        { value: 'enter', name: 'Enter API key interactively, without storing' },
+        { value: 'config', name: 'Store in config file (NOTE: stored in plaintext)' },
+      ],
+    });
+
+    if (answer === 'enter' || answer === 'config')
+    {
+      apiKey = await Input.prompt({
+        message: 'Enter your API key:',
+      });
+      if (answer === 'config')
+      {
+        await config.set('api-key', apiKey);
+      }
+    }
+    else
+    {
+      Deno.exit(1);
+    }
+  }
 
   console.log('repeat', repeat);
 
