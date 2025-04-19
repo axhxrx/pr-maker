@@ -124,7 +124,7 @@ async function promptToggle(
 }
 
 // Main CLI function
-export async function runCli(argsOverride?: string[]) { // Added export and argsOverride
+export async function runCli(argsOverride?: string[]): Promise<number> { // Changed return type
   console.log('Welcome to pr-maker!\n');
 
   const parsedArgs = parseArgs(argsOverride ?? Deno.args, argsDefinition); // Use argsOverride or Deno.args
@@ -144,7 +144,7 @@ export async function runCli(argsOverride?: string[]) { // Added export and args
     console.log('  --dryRun           Perform a dry run without making changes');
     console.log('  --help, -h         Show this help message');
     console.log('\nConfiguration is stored in:', await initConfig(appId, {}, {}).then(c => c.getConfigFilePath())); // Show path only
-    return;
+    return 0; // Return 0 after showing help
   }
 
   // 1. Initialize configuration (handles env, config file, prompts)
@@ -197,7 +197,7 @@ export async function runCli(argsOverride?: string[]) { // Added export and args
       proceed = true;
     } else if (action === 'exit') {
       console.log('Exiting.');
-      return; // Use return instead of Deno.exit for cleaner testing if needed
+      return 1; // Changed to return 1
     } else {
       // 4. Change Configuration Menu
       const keyToChange = await promptSelect<keyof PrMakerConfig | 'done'>({
@@ -307,6 +307,7 @@ export async function runCli(argsOverride?: string[]) { // Added export and args
     );
 
     console.log(`\n✅ Successfully created Pull Request: ${prUrl}`);
+    return 0; // Return 0 on successful completion
 
   } catch (error) {
     // Add type check for error object
@@ -316,7 +317,7 @@ export async function runCli(argsOverride?: string[]) { // Added export and args
     if (error instanceof Error && error.stack) {
         console.error(error.stack);
     }
-    Deno.exit(1); // Exit with error code
+    return 1; // Return 1 on error
   } finally {
     // 7. Cleanup temporary directory
     if (tempCheckoutDir) {

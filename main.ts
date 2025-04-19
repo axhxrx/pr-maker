@@ -1,27 +1,21 @@
 /**
- * Main entry point for the pr-maker CLI application.
- * This file imports the core CLI logic from `cli.ts` and executes it.
- * Separating this allows `cli.ts` to be imported for testing without immediately running.
+ * Main entry point for the application.
+ * This function calls the core CLI logic and handles the final process exit.
  */
 import { runCli } from "./cli.ts";
 
-/**
- * Executes the main CLI logic.
- * Catches and logs any top-level errors.
- */
-export async function main(): Promise<void> {
+export async function main() {
+  let exitCode = 1; // Default to error exit code
   try {
-    await runCli();
-  } catch (err) {
-    // Ensure error is properly handled and logged
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('\n❌ An unexpected error occurred:', errorMessage);
-    if (err instanceof Error && err.stack) {
-      // Optionally log stack trace for debugging
-      // console.error(err.stack);
-    }
-    // Exit with a non-zero code to indicate failure
-    Deno.exit(1);
+    // Run the main CLI logic and get the intended exit code
+    exitCode = await runCli(); 
+  } catch (error) {
+    // Catch unexpected errors *not* handled by runCli's try/catch
+    console.error("\n❌ An unexpected error occurred in the main execution:", error);
+    exitCode = 1; // Ensure exit code is 1 for unexpected errors
+  } finally {
+    // Ensure Deno.exit is called regardless of how the try block finishes
+    Deno.exit(exitCode);
   }
 }
 
