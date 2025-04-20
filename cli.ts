@@ -1,6 +1,6 @@
 import { Input, Select, Toggle } from 'jsr:@cliffy/prompt@1.0.0-rc.4';
 import { parseArgs } from 'jsr:@std/cli@0.224.3';
-import { join } from 'jsr:@std/path@0.225.2'; // Needed for file path manipulation
+import { applyProposedChanges } from './applyProposedChanges.ts';
 import {
   checkoutRevision,
   commitChanges,
@@ -339,30 +339,11 @@ export async function runCli(
     console.log('\nApplying code changes...');
     const actualInstructions = proposedChanges ?? JSON.parse(Deno.env.get('CHANGE_INSTRUCTIONS_JSON') || '{}');
 
-    // --- !!! IMPORTANT: Replace Placeholder Logic Below !!! ---
-    // This section needs to interpret the `actualInstructions` object
-    // and perform the actual file modifications as described.
-    // The current logic is just a placeholder.
     console.log('[Placeholder] Applying change based on instructions (appending to README.md)...');
     console.log('[Placeholder] Instructions received:', JSON.stringify(actualInstructions));
-    // Example assuming a simple structure in actualInstructions:
-    // const fileToModify = actualInstructions.fileToUpdate || 'README.md';
-    // const contentToAdd = actualInstructions.content || `\n\nAutomated change by pr-maker at ${new Date().toISOString()}\n`;
-    const readmePath = join(tempCheckoutDir, 'README.md'); // Placeholder target
-    const changeContent = `\n\nAutomated change based on instructions: ${
-      JSON.stringify(actualInstructions)
-    }\nTimestamp: ${new Date().toISOString()}\n`; // Placeholder content
-    try
-    {
-      await Deno.writeTextFile(readmePath, changeContent, { append: true, create: true });
-      console.log(`[Placeholder] Appended content to ${readmePath}`);
-    }
-    catch (writeError)
-    {
-      console.error(`[Placeholder] Failed to modify ${readmePath}: ${writeError}. Continuing with commit attempt...`);
-      // Decide if this is a fatal error or not - for now, we try to continue
-    }
-    // --- End Placeholder Logic ---
+
+    // This will throw if it fails. This is the actual change-application logic, which expects a JSON object containing a translation (*.i18n.ts) changeset in the format defined by @axhxrx/internationalization-format-converter. Currently, that is the only kind of changeset that is supported, but this could be extended in the future to support arbitrary user-defined changesets.
+    await applyProposedChanges(tempCheckoutDir, actualInstructions);
 
     // 4. Commit changes
     console.log('\nCommitting changes...');
