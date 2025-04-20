@@ -139,9 +139,18 @@ async function promptToggle(
   return await Toggle.prompt(options);
 }
 
+// Define the expected structure for the result of runCli
+export interface CliResult {
+  exitCode: number;
+  prUrl?: string;
+  error?: string;
+}
+
 // Main CLI function
-export async function runCli(argsOverride?: string[]): Promise<number>
-{ // Changed return type
+export async function runCli(
+  argsOverride?: string[],
+  changeInstructions?: Record<string, unknown>, // Added parameter for direct instructions
+): Promise<CliResult> { // Changed return type
   console.log('Welcome to pr-maker!\n');
 
   const parsedArgs = parseArgs(argsOverride ?? Deno.args, argsDefinition); // Use argsOverride or Deno.args
@@ -162,7 +171,7 @@ export async function runCli(argsOverride?: string[]): Promise<number>
     console.log('  --dryRun           Perform a dry run without making changes');
     console.log('  --help, -h         Show this help message');
     console.log('\nConfiguration is stored in:', await initConfig(appId, {}, {}).then(c => c.getConfigFilePath())); // Show path only
-    return 0; // Return 0 after showing help
+    return { exitCode: 0 }; // Return success object
   }
 
   // 1. Initialize configuration (handles env, config file, prompts)
@@ -234,7 +243,7 @@ export async function runCli(argsOverride?: string[]): Promise<number>
       else if (action === 'exit')
       {
         console.log('Exiting.');
-        return 1; // Changed to return 1
+        return { exitCode: 1, error: 'User exited configuration.' }; // Changed to return error object
       }
       else
       {
@@ -324,24 +333,33 @@ export async function runCli(argsOverride?: string[]): Promise<number>
     const newBranchName = await createUniqueBranch(desiredBranchName, tempCheckoutDir);
     console.log(`Created and checked out branch: ${newBranchName}`);
 
-    // 3. Make changes (Placeholder: append to README.md)
-    console.log('\nApplying placeholder change (appending to README.md)...');
-    const readmePath = join(tempCheckoutDir, 'README.md');
-    const changeContent = `\n\nAutomated change by pr-maker at ${new Date().toISOString()}\n`;
-    try
-    {
+    // 3. Apply Code Changes (using changeInstructions parameter or env var)
+    console.log('\nApplying code changes...');
+    const actualInstructions = changeInstructions ?? JSON.parse(Deno.env.get('CHANGE_INSTRUCTIONS_JSON') || '{}');
+
+    // --- !!! IMPORTANT: Replace Placeholder Logic Below !!! ---
+    // This section needs to interpret the `actualInstructions` object
+    // and perform the actual file modifications as described.
+    // The current logic is just a placeholder.
+    console.log('[Placeholder] Applying change based on instructions (appending to README.md)...');
+    console.log('[Placeholder] Instructions received:', JSON.stringify(actualInstructions));
+    // Example assuming a simple structure in actualInstructions:
+    // const fileToModify = actualInstructions.fileToUpdate || 'README.md';
+    // const contentToAdd = actualInstructions.content || `\n\nAutomated change by pr-maker at ${new Date().toISOString()}\n`;
+    const readmePath = join(tempCheckoutDir, 'README.md'); // Placeholder target
+    const changeContent = `\n\nAutomated change based on instructions: ${JSON.stringify(actualInstructions)}\nTimestamp: ${new Date().toISOString()}\n`; // Placeholder content
+    try {
       await Deno.writeTextFile(readmePath, changeContent, { append: true, create: true });
-      console.log(`Appended content to ${readmePath}`);
-    }
-    catch (writeError)
-    {
-      console.error(`Failed to modify README.md: ${writeError}. Continuing with commit attempt...`);
+      console.log(`[Placeholder] Appended content to ${readmePath}`);
+    } catch (writeError) {
+      console.error(`[Placeholder] Failed to modify ${readmePath}: ${writeError}. Continuing with commit attempt...`);
       // Decide if this is a fatal error or not - for now, we try to continue
     }
+    // --- End Placeholder Logic ---
 
     // 4. Commit changes
+    console.log('\nCommitting changes...');
     const commitMessage = currentConfig.prTitle; // Use PR title as commit message
-    console.log(`\nCommitting changes with message: "${commitMessage}"...`);
     await commitChanges(commitMessage, tempCheckoutDir);
 
     // 5. Push branch
@@ -365,7 +383,7 @@ export async function runCli(argsOverride?: string[]): Promise<number>
     );
 
     console.log(`\n✅ Successfully created Pull Request: ${prUrl}`);
-    return 0; // Return 0 on successful completion
+    return { exitCode: 0, prUrl: prUrl }; // Return success object with URL
   }
   catch (error)
   {
@@ -377,7 +395,7 @@ export async function runCli(argsOverride?: string[]): Promise<number>
     {
       console.error(error.stack);
     }
-    return 1; // Return 1 on error
+    return { exitCode: 1, error: errorMessage }; // Return error object
   }
   finally
   {
@@ -396,10 +414,4 @@ export async function runCli(argsOverride?: string[]): Promise<number>
       }
     }
   }
-
-  // Remove the old placeholder message
-  // console.log('\nFIXME: TO BE IMPLEMENTED! HERE IS THE CONFIG WE WOULD USE:');
-  // // Pretty print the final config, masking token
-  // const configToPrint = { ...currentConfig, githubToken: currentConfig.githubToken ? '********' : '(not set)' };
-  // console.log(JSON.stringify(configToPrint, null, 2));
 }

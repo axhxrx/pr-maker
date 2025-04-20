@@ -51,13 +51,12 @@ Deno.test('initConfig (pr-maker) should load default pr-maker config and handle 
     // --- Assert ---
     assertEquals(config.get('githubOrg'), 'test-org-scripted');
     assertEquals(config.get('repoName'), 'test-repo-scripted');
-    assertEquals(config.get('prLabels'), 'bug, enhancement');
+    assertEquals(config.get('prLabels'), ''); // Expect default empty string as prompt is skipped
     assertEquals(config.get('baseBranch'), 'main'); // Default
     assertEquals(config.get('githubToken'), 'dummy-token-for-test-1'); // Env override
-    assertEquals(initConfigPromptHistory.length, 3);
+    assertEquals(initConfigPromptHistory.length, 2); // Expect only org and repo prompts
     assertEquals(initConfigPromptHistory[0]?.message, 'Enter the GitHub organization name:');
     assertEquals(initConfigPromptHistory[1]?.message, 'Enter the repository name:');
-    assertEquals(initConfigPromptHistory[2]?.message, 'Enter comma-separated labels (optional):');
     // ------------
   }
   finally
@@ -119,8 +118,8 @@ Deno.test('initConfig (pr-maker) should respect GITHUB_TOKEN env override (no pr
 
     // --- Assert ---
     assertEquals(config.get('githubToken'), testToken);
-    // Expect prompts for org, repo, labels as they are empty defaults and need scripted input
-    assertEquals(initConfigPromptHistory.length, 3);
+    // Expect prompts for org, repo as they are empty defaults and need scripted input
+    assertEquals(initConfigPromptHistory.length, 2); // Expect only org and repo prompts
     assertEquals(initConfigPromptHistory.some(p => p.message.includes('GitHub Token')), false); // Ensure token specifically wasn't prompted
     // ------------
   }
@@ -179,8 +178,8 @@ Deno.test('initConfig (pr-maker) set/get should work with pr-maker config', asyn
     // --- Act 1: Initialize Config ---
     const config = await initConfig(testAppId, prMakerDefaultConfig);
     // --- Assert 1: Check init prompts ---
-    // Check that the 3 expected prompts occurred during init
-    assertEquals(initConfigPromptHistory.length, 3);
+    // Check that the 2 expected prompts occurred during init
+    assertEquals(initConfigPromptHistory.length, 2); // Expect only org and repo prompts
     const initHistoryLength = initConfigPromptHistory.length;
     // ------------------------------------
 

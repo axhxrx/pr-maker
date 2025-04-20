@@ -1,6 +1,6 @@
 import { assertEquals, assertStringIncludes } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import { spy, type SpyCall } from 'https://deno.land/std@0.224.0/testing/mock.ts';
-import { runCli } from './cli.ts';
+import { runCli, type CliResult } from './cli.ts';
 
 /**
  * Tests for the main CLI logic in runCli.
@@ -10,11 +10,11 @@ Deno.test('runCli should display help message and return 0 with --help argument'
   // Spy on console.log to capture output
   const logSpy = spy(console, 'log');
 
-  let exitCode: number | undefined;
+  let result: CliResult;
   try
   {
-    // Provide the --help argument and capture the returned exit code
-    exitCode = await runCli(['--help']);
+    // Provide the --help argument and capture the returned CliResult object
+    result = await runCli(['--help']);
   }
   finally
   {
@@ -23,7 +23,7 @@ Deno.test('runCli should display help message and return 0 with --help argument'
   }
 
   // Assert that the exit code returned by runCli is 0
-  assertEquals(exitCode, 0, 'runCli should return 0 when --help is provided.');
+  assertEquals(result.exitCode, 0, 'runCli should return 0 when --help is provided.');
 
   // Verify that the help message includes expected sections
   const allLogCalls = logSpy.calls.map((call: SpyCall) => call.args.join(' ')).join('\n');
