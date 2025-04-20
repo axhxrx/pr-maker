@@ -1,6 +1,6 @@
 import { assertEquals, assertStringIncludes } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import { spy, type SpyCall } from 'https://deno.land/std@0.224.0/testing/mock.ts';
-import { runCli, type CliResult } from './cli.ts';
+import { type CliResult, runCli } from './cli.ts';
 
 /**
  * Tests for the main CLI logic in runCli.

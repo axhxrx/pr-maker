@@ -140,7 +140,8 @@ async function promptToggle(
 }
 
 // Define the expected structure for the result of runCli
-export interface CliResult {
+export interface CliResult
+{
   exitCode: number;
   prUrl?: string;
   error?: string;
@@ -149,8 +150,9 @@ export interface CliResult {
 // Main CLI function
 export async function runCli(
   argsOverride?: string[],
-  changeInstructions?: Record<string, unknown>, // Added parameter for direct instructions
-): Promise<CliResult> { // Changed return type
+  proposedChanges?: Record<string, unknown>, // Added parameter for direct instructions
+): Promise<CliResult>
+{ // Changed return type
   console.log('Welcome to pr-maker!\n');
 
   const parsedArgs = parseArgs(argsOverride ?? Deno.args, argsDefinition); // Use argsOverride or Deno.args
@@ -333,9 +335,9 @@ export async function runCli(
     const newBranchName = await createUniqueBranch(desiredBranchName, tempCheckoutDir);
     console.log(`Created and checked out branch: ${newBranchName}`);
 
-    // 3. Apply Code Changes (using changeInstructions parameter or env var)
+    // 3. Apply Code Changes (using proposedChanges parameter or env var)
     console.log('\nApplying code changes...');
-    const actualInstructions = changeInstructions ?? JSON.parse(Deno.env.get('CHANGE_INSTRUCTIONS_JSON') || '{}');
+    const actualInstructions = proposedChanges ?? JSON.parse(Deno.env.get('CHANGE_INSTRUCTIONS_JSON') || '{}');
 
     // --- !!! IMPORTANT: Replace Placeholder Logic Below !!! ---
     // This section needs to interpret the `actualInstructions` object
@@ -347,11 +349,16 @@ export async function runCli(
     // const fileToModify = actualInstructions.fileToUpdate || 'README.md';
     // const contentToAdd = actualInstructions.content || `\n\nAutomated change by pr-maker at ${new Date().toISOString()}\n`;
     const readmePath = join(tempCheckoutDir, 'README.md'); // Placeholder target
-    const changeContent = `\n\nAutomated change based on instructions: ${JSON.stringify(actualInstructions)}\nTimestamp: ${new Date().toISOString()}\n`; // Placeholder content
-    try {
+    const changeContent = `\n\nAutomated change based on instructions: ${
+      JSON.stringify(actualInstructions)
+    }\nTimestamp: ${new Date().toISOString()}\n`; // Placeholder content
+    try
+    {
       await Deno.writeTextFile(readmePath, changeContent, { append: true, create: true });
       console.log(`[Placeholder] Appended content to ${readmePath}`);
-    } catch (writeError) {
+    }
+    catch (writeError)
+    {
       console.error(`[Placeholder] Failed to modify ${readmePath}: ${writeError}. Continuing with commit attempt...`);
       // Decide if this is a fatal error or not - for now, we try to continue
     }

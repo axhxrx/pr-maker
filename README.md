@@ -1,15 +1,25 @@
 # pr-maker
 
+## 🚧 WIP — DO NOT USE THIS* 🚧
+
+`*: unless you understand that this is a work in progress, created mainly by unthinking automatons, and know what you are doing`
+
 A server that provides an API to make GitHub pull requests to existing repositories.
 
-# Instructions to LLMs
+NOTE: This is a utility I've been meaning to make for a while, and while it does have (or will have, when finished) some usefulness, this project is so far an experiment to test different LLM coding techniques.
+
+So the code is probably quite shit, until further notice. Most commits are hands-off LLM code, with occasional human fixes where needed (in separate commits).
+
+THAT INCLUDES THE README CONTENT BELOW, SO ANYTHING HERE MAY BE HALLUCINATED OR INACCURATE.
+
+## Instructions to LLMs
 - Do your work in small increments. Try to edit only a 1-2 files at once, then describe your work and ask for a quick review, and propose what to do next.
 - Use dprint for code formatting (you can run command `dprint fmt`)
 - Use deno for running commands (you can run command `deno run mod.ts` to run the program)
 - Use Deno for testing (you can run command `deno test -A`)
 - Review `deno.jsonc` for the libs we already use. When needed, you can propose adding other libs from jsr.io
 
-# Tech stack:
+## Tech stack:
 - Deno
 - JSR.io — all dependencies should be configured like `deno add jsr:@hono/hono` (already done, in that case, see deno.jsonc)
 - dprint for [beautiful Allman-style braces](https://jsr.io/@axhxrx/dprint-config/0.0.6/dprint.jsonc)
@@ -25,10 +35,12 @@ A server that provides an API to make GitHub pull requests to existing repositor
 
 2.  **Environment Variables:**
     *   Certain configuration values can be overridden by setting environment variables:
-        *   `GITHUB_TOKEN`: Overrides the stored GitHub token.
+        *   `GITHUB_TOKEN`: Overrides the stored GitHub token. This should be a finely-grained token with limited permissions in normal cases. But a regular PAT will work too, and may be suitable for development, depending on your security constraints.
         *   `GITHUB_ORG`: Overrides the default GitHub organization.
         *   `REPO_NAME`: Overrides the default repository name.
         *   `PR_LABELS`: Overrides the default comma-separated labels.
+        *   `CORS_DEFAULT_ORGIN`: Specifies the default CORS origin, from which requests can be made (e.g. `https://hoge-pr-api.axhxrx.com`)
+        *   `CORS_ORIGIN_ENDS_WITH`: Overrides the default CORS origin, enabling any origin that ends with this string (e.g. `.axhxrx.com`)
 
 3.  **Command-Line Arguments:**
     *   Specific commands (like the planned `modify` command) can accept arguments to directly set or override configuration values for that specific run.

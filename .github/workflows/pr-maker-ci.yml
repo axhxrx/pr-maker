@@ -19,7 +19,7 @@ on:
         description: 'Comma-separated list of labels (optional)'
         required: false
         default: ''
-      changeInstructionsJson:
+      proposedChangesJson:
         description: 'JSON string describing the changes to make'
         required: true # Assuming the changes are always required
         type: string
@@ -92,5 +92,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Pass the JSON instructions as an environment variable
-          CHANGE_INSTRUCTIONS_JSON: ${{ github.event.inputs.changeInstructionsJson }}
+          CHANGE_INSTRUCTIONS_JSON: ${{ github.event.inputs.proposedChangesJson }}
           # Add any other ENV VARS your script needs
