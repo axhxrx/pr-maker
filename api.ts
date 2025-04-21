@@ -16,10 +16,10 @@ interface CreatePrPayload
 }
 
 // --- Constants & Config ---
-const PORT = 8000;
-const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN');
-const CORS_DEFAULT_ORGIN = Deno.env.get('CORS_DEFAULT_ORGIN') || 'https://default.origin.axhxrx.com';
-const CORS_ORIGIN_ENDS_WITH = Deno.env.get('CORS_ORIGIN_ENDS_WITH') || '.axhxrx.com';
+const PR_MAKER_PORT = Number(Deno.env.get('PR_MAKER_PORT') || '8000');
+const PR_MAKER_GITHUB_TOKEN = Deno.env.get('PR_MAKER_GITHUB_TOKEN');
+const PR_MAKER_CORS_DEFAULT_ORGIN = Deno.env.get('PR_MAKER_CORS_DEFAULT_ORGIN') || 'https://default.origin.axhxrx.com';
+const PR_MAKER_CORS_ORIGIN_ENDS_WITH = Deno.env.get('PR_MAKER_CORS_ORIGIN_ENDS_WITH') || '.axhxrx.com';
 
 // const HONO_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 // const HONO_RATE_LIMIT_MAX_REQUESTS = 20;
@@ -38,12 +38,12 @@ app.use(
         || origin.startsWith('http://0.0.0.0')
         || origin.startsWith('http://::1');
 
-      const isAllowedRemoteHost = origin.endsWith(CORS_DEFAULT_ORGIN)
-        || origin.endsWith(CORS_ORIGIN_ENDS_WITH);
+      const isAllowedRemoteHost = origin.endsWith(PR_MAKER_CORS_DEFAULT_ORGIN)
+        || origin.endsWith(PR_MAKER_CORS_ORIGIN_ENDS_WITH);
 
       return isLocalHost || isAllowedRemoteHost
         ? origin
-        : CORS_DEFAULT_ORGIN;
+        : PR_MAKER_CORS_DEFAULT_ORGIN;
     },
   }),
 );
@@ -80,7 +80,7 @@ app.post('/create-pr', async (c) =>
   console.log(`[${new Date().toISOString()}] Received POST /create-pr`);
 
   // Check for GitHub Token (Server Configuration)
-  if (!GITHUB_TOKEN)
+  if (!PR_MAKER_GITHUB_TOKEN)
   {
     console.error('FATAL: GITHUB_TOKEN environment variable is not set.');
     return c.json({ success: false, error: 'Server configuration error: Missing GitHub token.' }, 500);
@@ -145,7 +145,7 @@ app.post('/create-pr', async (c) =>
   const argsOverride: string[] = [
     '--yes', // Automatically confirm prompts
     '--githubToken',
-    GITHUB_TOKEN, // Pass token securely
+    PR_MAKER_GITHUB_TOKEN, // Pass token securely
     '--githubOrg',
     payload.githubOrg,
     '--repoName',
@@ -170,7 +170,7 @@ app.post('/create-pr', async (c) =>
   }
 
   // --- Execute Core Logic ---
-  console.log('Calling runCli with args:', argsOverride.filter(arg => arg !== GITHUB_TOKEN)); // Don't log token
+  console.log('Calling runCli with args:', argsOverride.filter(arg => arg !== PR_MAKER_GITHUB_TOKEN)); // Don't log token
   try
   {
     const result: CliResult = await runCli(argsOverride, payload.proposedChanges);
@@ -199,5 +199,37 @@ app.post('/create-pr', async (c) =>
 app.get('/', (c) => c.text('PR Maker API is running!'));
 
 // --- Start Server ---
-console.log(`PR Maker API server starting on http://localhost:${PORT}`);
-Deno.serve({ port: PORT }, app.fetch);
+// Read cert and key for HTTPS
+let cert: string;
+let key: string;
+try
+{
+  cert = await Deno.readTextFile('./cert.pem');
+  key = await Deno.readTextFile('./key.pem');
+}
+catch (error)
+{
+  console.error(`
+    SSL setup error: This project requires a certificate and key to run in HTTPS mode. 
+    
+    The files 'cert.pem' and 'key.pem' must exist in the current directory. 
+    
+    A command something like the following might be able to generate them, but this depends, so do your own research:
+
+    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes -subj "/CN=localhost"
+
+    `);
+  console.error(`Failed to read certificate or key: ${error}`);
+  Deno.exit(1);
+}
+
+console.log(`PR Maker API server starting on https://localhost:${PR_MAKER_PORT}`);
+console.log(
+  `PR Maker API server allowing CORS for origins ending with ${PR_MAKER_CORS_ORIGIN_ENDS_WITH} (and localhost and equivalent, which are always allowed)`,
+);
+
+Deno.serve({
+  port: PR_MAKER_PORT,
+  cert: cert, // Add cert option
+  key: key, // Add key option
+}, app.fetch);
