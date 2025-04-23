@@ -77,5 +77,8 @@ We'll provide an API later, but for now CLI commands will be used. The process w
 ## initial tests
 - E2E tests that does the whole process (just appending text to README.md (creating it if needed)) as the changes
 
+## happenings
 
-🤖 2025-04-19: repo initialized by Bottie McBotface bot@axhxrx.com
+- 🎅 2025-04-23: v0.0.2 — fix bug where git submodules were not shallow-cloned when the target repo is shallow-cloned
+
+- 🤖 2025-04-19: repo initialized by Bottie McBotface bot@axhxrx.com

@@ -65,7 +65,8 @@ export async function checkoutRevision(
     // Note: Cloning a specific commit hash directly might require fetching first or different clone args.
     // Cloning a branch/tag and then checking out the commit is often more reliable.
     console.log(`Cloning ${repoUrl} (revision: ${revision}) into ${tempDir}...`);
-    await runGitCommand(['clone', '--depth', '1', '--branch', revision, repoUrl, '.'], tempDir);
+    await runGitCommand(['clone', '--depth', '1', '--branch', revision, '--recurse-submodules', '--shallow-submodules',
+      repoUrl, '.'], tempDir);
     console.log('Clone successful.');
 
     // If revision is a commit hash, we might need an explicit checkout after clone
