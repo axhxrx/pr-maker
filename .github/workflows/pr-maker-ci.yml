@@ -1,3 +1,7 @@
+# Example of how to use pr-maker in GitHub Actions. Notes:
+# - change "mod.ts" to the full JSR URL to the mod.ts of the version you want to use (e.g. https://jsr.io/@axhxrx/pr-maker/0.0.2/mod.ts)
+# - add a GitHub Actions scoped secret to your repo named PR_MAKER_FGPAT and ensure it has enough permissions to clone your repo and all its submodules (e.g. Contents read/write, pull-requests read/write, and Issues read/write)
+
 name: Run PR Maker CLI
 
 on:
@@ -53,6 +57,11 @@ jobs:
           git config --global user.name "pr-maker[bot]"
           git config --global user.email "pr-maker@axhxrx.com"
 
+      # This is necessary to enable the workflow to check out submodules, if they are defined as SSH "git@gitub.com:..." style URLs.
+      # Note that weird submodules still probably won't be supported (like private submodules from another org unless PR_MAKER_FGPAT has access).
+      - name: Configure Git HTTPS access for submodules
+        run: git config --global url."https://oauth2:${{ secrets.PR_MAKER_FGPAT }}@github.com/".insteadOf "git@github.com:"
+
       - name: Generate unique branch name
         id: vars
         run: echo "branch_name=ci-pr-${{ github.run_id }}" >> $GITHUB_OUTPUT
@@ -86,11 +95,9 @@ jobs:
           # NOTE: We are NOT passing the JSON instructions via CLI args.
           # The script will read it from the environment variable below.
 
-          echo "Running deno run ${ARGS[@]}"
-          deno run "${ARGS[@]}"
+          echo "Running: deno run ${ARGS[@]} using dedicated PR_MAKER_FGPAT"
+          GITHUB_TOKEN=${{ secrets.PR_MAKER_FGPAT }} deno run "${ARGS[@]}"
 
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Pass the JSON instructions as an environment variable
           CHANGE_INSTRUCTIONS_JSON: ${{ github.event.inputs.proposedChangesJson }}
-          # Add any other ENV VARS your script needs
