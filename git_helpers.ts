@@ -33,6 +33,39 @@ async function runGitCommand(args: string[], cwd: string): Promise<void>
 }
 
 /**
+ * Ensures a string is a valid Git branch name component.
+ * - Replaces invalid characters with hyphens.
+ * - Removes leading/trailing hyphens.
+ * - Collapses consecutive hyphens.
+ * - Returns a default name if the result is empty.
+ *
+ * @param potentialName The string to sanitize.
+ * @returns A valid Git branch name component.
+ */
+export function sanitizeBranchName(potentialName: string): string
+{
+  let branchName = potentialName;
+
+  // 1. Replace sequences of non-alphanumeric/non-hyphen chars with a single hyphen
+  branchName = branchName.replace(/[^a-zA-Z0-9-]+/g, '-');
+  // 2. Collapse consecutive hyphens
+  branchName = branchName.replace(/-{2,}/g, '-');
+  // 3. Remove leading hyphens
+  branchName = branchName.replace(/^-+/, '');
+  // 4. Remove trailing hyphens
+  branchName = branchName.replace(/-+$/, '');
+
+  // 5. Handle empty or invalid result
+  if (!branchName)
+  {
+    console.warn(`Original name "${potentialName}" sanitized to empty, using default.`);
+    branchName = 'sanitized-branch-name-for-pr-maker'; // Default fallback
+  }
+
+  return branchName;
+}
+
+/**
  * Clones a repository and checks out a specific revision (branch, tag, or commit hash).
  * Creates a temporary directory for the clone.
  *
@@ -129,14 +162,16 @@ async function remoteBranchExists(branchName: string, cwd: string): Promise<bool
  */
 export async function createUniqueBranch(desiredBranchName: string, cwd: string): Promise<string>
 {
-  let branchName = desiredBranchName;
+  const baseBranchName = sanitizeBranchName(desiredBranchName);
+  let branchName = baseBranchName;
+
   let counter = 0;
 
   // Check if the desired name or variations exist remotely
   while (await remoteBranchExists(branchName, cwd))
   {
     counter++;
-    branchName = `${desiredBranchName}-${counter}`;
+    branchName = `${baseBranchName}-${counter}`; // Use the sanitized base name
     console.log(`Branch 'origin/${branchName}' already exists remotely. Trying '${branchName}'...`);
   }
 

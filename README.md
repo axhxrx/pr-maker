@@ -79,6 +79,8 @@ We'll provide an API later, but for now CLI commands will be used. The process w
 
 ## happenings
 
+- 👹 2025-04-24: v0.0.3 — fix bug where branch name was not cleaned up sufficiently to be valid, in some cases, causing PR creation to fail
+
 - 🎅 2025-04-23: v0.0.2 — fix bug where git submodules were not shallow-cloned when the target repo is shallow-cloned
 
 - 🤖 2025-04-19: repo initialized by Bottie McBotface bot@axhxrx.com
