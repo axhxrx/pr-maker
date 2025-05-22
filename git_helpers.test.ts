@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { assertEquals } from 'jsr:@std/assert@0.225.3';
 import { sanitizeBranchName } from './git_helpers.ts';
 
 Deno.test('sanitizeBranchName should handle valid names', () =>
